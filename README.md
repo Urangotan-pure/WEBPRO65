@@ -1,20 +1,19 @@
-# WEBPRO65
-
-mkdir ชื่อโฟลเดอร์ --> การสร้าง folder
-npm init --> การติดตั้ง package
-npm install express
-nodemon --> 
-
+<h1> WEEK 8</h1>
+mkdir ชื่อโฟลเดอร์ --> การสร้าง folder <br>
+npm init --> การติดตั้ง package<br>
+npm install express<br>
+nodemon --> <br>
 
 
-folder 
-: public --> เก็บไฟล์ (รูปภาพ, องค์ประกอบตกแต่ง)
-    > bulma-rtl.css
-    > bulma-rtl.css.map
-    > bulma-rtl.min.css
-    > bulma.css
-    > bulma.css.map
-    > bulma.min.css
-: router --> เก็บ router โดยการแยกไฟล์ ไม่รวมกัน
-: views --> เก็บ template ที่เราจะมาแสดงผลบน browser
+
+folder <br>
+: public --> เก็บไฟล์ (รูปภาพ, องค์ประกอบตกแต่ง)<br>
+    > bulma-rtl.css<br>
+    > bulma-rtl.css.map<br>
+    > bulma-rtl.min.css<br>
+    > bulma.css<br>
+    > bulma.css.map<br>
+    > bulma.min.css<br>
+: router --> เก็บ router โดยการแยกไฟล์ ไม่รวมกัน<br>
+: views --> เก็บ template ที่เราจะมาแสดงผลบน browser<br>
 
