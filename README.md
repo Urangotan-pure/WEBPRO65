@@ -1,6 +1,3 @@
-# WEBPRO65
-
-
 <h1> WEEK 8</h1>
 mkdir ชื่อโฟลเดอร์ --> การสร้าง folder <br>
 npm init --> การติดตั้ง package<br>
