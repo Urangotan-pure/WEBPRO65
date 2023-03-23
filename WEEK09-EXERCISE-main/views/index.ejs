@@ -7,6 +7,7 @@
     <link href="/css/all.css" rel="stylesheet" />
     <link href="/css/bulma.css" rel="stylesheet" />
     <script src="/js/all.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
     <title>My Blogs</title>
   </head>
   <body class="has-background-light">
@@ -20,27 +21,22 @@
           <div class="content">
             <div class="columns is-multiline">
               <!-- loop -->
-              <% for (let blog of blogs) { %>
-                <div class="column is-3">
+                <div class="column is-3" v-for="blog in computedblogs">
                   <div class="card">
                       <div class="card-image pt-5">
                         <figure class="image">
-                          <img src="<%= blog.file_path ? blog.file_path : 'https://bulma.io/images/placeholders/640x360.png' %>" alt="Placeholder image">
+                          <img :src="blog.file_path" alt="Placeholder image">
                         </figure>
                       </div>
                       <div class="card-content">
-                        <div class="title"><%= blog.title %> </div>
+                        <div class="title">{{blog.title}} </div>
                         <div class="content">
-                          <% if (blog.content.length > 200) { %>
-                            <%= blog.content.substring(0, 197) + "..." %>
-                          <% } else { %>
-                            <%= blog.content %>
-                          <% } %>
+                          {{blog.content}}
                         </div>
                         
                       </div>
                       <footer class="card-footer">
-                        <a class="card-footer-item" href="<%= `/detail/${blog.id}/` %>">Read more...</a>
+                        <a class="card-footer-item" :href="'/detail/' + blog.id ">Read more...</a>
                         <a class="card-footer-item">
                           <span class="icon-text">
                             <span class="icon">
@@ -52,9 +48,27 @@
                       </footer>
                   </div>
                 </div>
-              <% } %>
             </div>
       </section>
   </div>
+  <script>
+    var app = new Vue({
+      el : "#app",
+      data : {
+        blogs: JSON.parse(`<%- data %>`)
+      },
+      computed: {
+        computedblogs () {
+          let results = this.blogs
+          return results.map((b) => {
+            if(b.content.length > 200){
+              b.content =  b.content.substring(0, 200) + " ..."
+            }
+            return b
+          })
+        }
+      }
+    })
+  </script>
   </body>
 </html>

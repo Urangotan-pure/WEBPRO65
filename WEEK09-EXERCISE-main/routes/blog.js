@@ -5,8 +5,9 @@ const pool = require("../config");
 const router = express.Router();
 
 router.get('/', async function (req, res,next){
-  const [rows, fields]  =await pool.query('SELECT * FROM blogs')
-  res.render('index', {blogs: rows}) //ส่งตัวแปร  blogs
+  const [rows, fields]  =await pool.query(
+    'SELECT a.*, b.file_path FROM blogs AS a LEFT JOIN images AS b ON a.id = b.blog_id AND b.main = 1')
+  res.render('index', {data : JSON.stringify(rows)}) //ส่งตัวแปร  blogs
 })
 
 // // For tutorial 1
@@ -24,10 +25,31 @@ router.get('/', async function (req, res,next){
 //   // Your code here
 // });
 
-// // For blog detail page
-// router.get("/detail/:blogId", function (req, res, next) {
-//   // Your code here
-// });
+// For blog detail page
+router.get("/detail/:blogId", async function (req, res, next) {
+  // Your code here
+  const [blogs, columns1]  = await pool.query(
+    'SELECT * FROM blogs WHERE id = ?',
+    [req.params.blogId])
+
+    const [image, columns2]  = await pool.query(
+    'SELECT * FROM images WHERE blog_id = ?',
+    [req.params.blogId])
+
+    const [comments, columns3]  = await pool.query(
+      'SELECT * FROM comments WHERE blog_id = ?',
+      [req.params.blogId])
+  
+
+
+  console.log(blogs)
+  console.log(image)
+  res.render('blogs/detail',{
+    blog : JSON.stringify(blogs[0]),
+    images : JSON.stringify(image),
+    comments : JSON.stringify(comments),
+  })
+});
 
 // // For updating blog
 // router.put("/update/:blogId", function (req, res) {
