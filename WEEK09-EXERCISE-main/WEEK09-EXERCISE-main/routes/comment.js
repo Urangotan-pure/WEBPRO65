@@ -15,7 +15,7 @@ router.post('/:blogId/comments', async function(req, res, next){
     } = req.body
     const id = req.params.blogId
     try {
-        const [rows2, fields2] = await pool.query("insert into `comments`(`blog_id`, `comment`, `like`, `comment_date`, `comment_by_id`) value(?, ?, ?, CURRENT_TIMESTAMP, ?)", 
+        const [rows2, fields2] = await pool.query("INSERT INTO `comments`(`blog_id`, `comment`, `like`, `comment_date`, `comment_by_id`) value(?, ?, ?, CURRENT_TIMESTAMP, ?)", 
         [
             id,
             comment,
@@ -69,7 +69,7 @@ router.put('/comments/:commentId', async function(req, res, next){
 router.delete('/comments/:commentId', async function(req, res, next){
     const id = req.params.commentId
     try {
-        const [rows2, fields2] = await pool.query("delete from `comments` where `id`=?", 
+        const [rows2, fields2] = await pool.query("DELETE from comments WHERE id=?", 
         [
             id
         ]);
@@ -90,7 +90,7 @@ router.put('/comments/addlike/:commentId', async function(req, res, next){
         ]);
         let likeNum = rows[0].like
         likeNum += 1
-        const [rows2, fields2] = await pool.query("update `comments` set `like` = ? where `id`=?", 
+        const [rows2, fields2] = await pool.query("UPDATE comments SET like = ? WHERE id=?", 
         [
             likeNum,
             id
