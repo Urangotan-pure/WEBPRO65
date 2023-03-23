@@ -26,7 +26,14 @@ router.post("/blogs/addlike/:blogId", async function (req, res, next) {
       ]);
   
       // return json response
-      res.redirect('/');
+      // return res.json({
+      //   +      blogId: Number(req.params.blogId),
+      //   +      likeNum: likeNum
+      //   +    })
+
+      //Redirect ไปที่หน้า index เพื่อแสดงข้อมูล
+      res.redirect('/'); 
+
     } catch (err) {
       return next(err);
     }
