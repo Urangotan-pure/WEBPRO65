@@ -9,20 +9,27 @@ app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
 // Statics
-app.use(express.static(path.join(__dirname, 'static')))
+app.use(express.static(path.join(__dirname, 'static'))) //public
 
-app.use(express.json()) // for parsing application/json
-app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+// app.use(express.json()) // for parsing application/json
+// app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
-// routers
-const indexRouter = require('./routes/index')
+// // routers
+// const indexRouter = require('./routes/index')
 const blogRouter = require('./routes/blog')
-const commentRouter = require('./routes/comment')
+// const commentRouter = require('./routes/comment')
 
-app.use(indexRouter.router)
+// app.use(indexRouter.router)
 app.use(blogRouter.router)
-app.use(commentRouter.router)
+// app.use(commentRouter.router)
 
 app.listen(3000, () => {
   console.log(`Example app listening at http://localhost:3000`)
 })
+
+
+//ตามVDO แล้วใช้ไม่ได้
+
+// //config Router
+// const indexRouter = require('./routes/blog')
+// app.use('/', indexRouter)

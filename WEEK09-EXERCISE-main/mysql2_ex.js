@@ -10,6 +10,12 @@ async function main(){
         database: 'webpro',
     });
 
+    
+    //libary mmysql2 เพื่อส่ง query ไปที่ฐานข้อมูล เพื่อที่จะเรียกดูข้อมูลได้
+    // return array ขนาด 2 ทั้งหมด
+    //rows เก็บข้อมูลทั้งหมดจากฐานข้อมูล  *ส่วนมากสนใจอันนี้ เพราะสนใจที่เรา query เป็นหลัก
+    //fields metadataของcolumn ของฐานข้อมูลที่เรา query
+    
     try{
         const [rows, fields] = await conn.query('SELECT * FROM blogs')
         console.log('rows:', rows)
