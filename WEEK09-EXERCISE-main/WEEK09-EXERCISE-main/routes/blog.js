@@ -4,6 +4,7 @@ const pool = require("../config");
 
 router = express.Router();
 
+
 // For tutorial 1
 router.post("/blogs/addlike/:blogId", async function (req, res, next) {
   // Your code here
