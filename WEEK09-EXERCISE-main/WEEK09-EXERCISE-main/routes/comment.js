@@ -15,7 +15,7 @@ router.post('/:blogId/comments', async function(req, res, next){
     } = req.body
     const id = req.params.blogId
     try {
-        const [rows2, fields2] = await pool.query("INSERT INTO `comments`(`blog_id`, `comment`, `like`, `comment_date`, `comment_by_id`) value(?, ?, ?, CURRENT_TIMESTAMP, ?)", 
+        const [rows2, fields2] = await pool.query("INSERT INTO comments(blog_id, comment, `like`, comment_date, comment_by_id) value(?, ?, ?, CURRENT_TIMESTAMP, ?)", 
         [
             id,
             comment,
@@ -42,6 +42,14 @@ router.put('/comments/:commentId', async function(req, res, next){
     try {
         const [rows2, fields2] = await pool.query("update `comments` set `comment` = ?, `like` = ?, `comment_date` = ?, `comment_by_id` = ?, `blog_id` = ? where `id`=?", 
         [
+            comment,
+            like,
+            comment_date,
+            comment_by_id,
+            blog_id,
+            id
+        ]);
+        console.log([
             comment,
             like,
             comment_date,
@@ -90,13 +98,13 @@ router.put('/comments/addlike/:commentId', async function(req, res, next){
         ]);
         let likeNum = rows[0].like
         likeNum += 1
-        const [rows2, fields2] = await pool.query("UPDATE comments SET like = ? WHERE id=?", 
+        const [rows2, fields2] = await pool.query("UPDATE comments SET comments.like = ? WHERE id = ?;", 
         [
             likeNum,
             id
         ]);
         return res.json({
-            "blogId": rows[0].blogId,
+            "blogId": rows[0].blog_id,
             "commentId": id,
             "likeNum": likeNum //5 คือจำนวน like ของ comment ที่มี id = 20 หลังจาก +1 like แล้ว
         })

@@ -6,7 +6,11 @@ const router = express.Router()
 const article = require("../article-db");
 
 router.get('/', function (req, res) {
-    res.render('ไม่พบหน้าที่ต้องการ')
+    res.send('ไม่พบหน้าที่ต้องการ')
+})
+
+router.get('/10', function (req, res) {
+    res.send('ไม่พบหน้าที่ต้องการ')
 })
 
 router.get('/:id', (req, res) => {

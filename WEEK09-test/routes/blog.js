@@ -102,8 +102,7 @@ router.get("/detail/:blogId", async function (req, res, next) {
 
 //   console.log('---------------------------------UPDATE-------------------------------------')
 //   console.log('rows: ', rows.affectedRows) //กระทบกี่ตัว
-//   console.log('rows: ', rows.changedRows) //ที่กระทบเปลี่ยนแปลงไปกี่ตัว
-//   console.log('rows', rows2)
+ //   console.log('rows', rows2)
 //   console.log('----------------------------------------------------------------------')
 // })
 
