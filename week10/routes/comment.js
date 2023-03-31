@@ -64,7 +64,7 @@ router.post("/:blogId/comments", upload.single("comment_image"),async function (
       next(err);
     } finally {
       console.log('finally')
-      conn.release();
+      conn.release(); //ปิด transaction
     }
   }
 );
