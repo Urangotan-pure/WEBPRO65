@@ -33,7 +33,7 @@
                                     <!-- image -->
                                     <img :src="
                                         blog.file_path
-                                            ? blog.file_path
+                                            ? 'http://localhost:3000' + blog.file_path
                                             : 'https://bulma.io/images/placeholders/640x360.png'
                                     " alt="Placeholder image" />
                                 </figure>

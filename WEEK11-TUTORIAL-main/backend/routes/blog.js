@@ -67,6 +67,7 @@ router.post("/blogs", upload.single('blog_image'), async function (req, res, nex
     const content = req.body.content;
     const status = req.body.status;
     const pinned = req.body.pinned;
+    // const m = req.body.pinned;
 
     const conn = await pool.getConnection()
     // Begin transaction
@@ -97,7 +98,7 @@ router.post("/blogs", upload.single('blog_image'), async function (req, res, nex
 
 router.get("/blogs/:id", function (req, res, next) {
   const promise1 = pool.query("SELECT * FROM blogs WHERE id=?", [req.params.id]);
-  const promise2 = pool.query("SELECT * FROM comments WHERE blog_id=?", [req.params.id]);
+  const promise2 = pool.query("SELECT * FROM comments JOIN images ON (comment_id = comments.id) WHERE comments.blog_id=?", [req.params.id]);
   const promise3 = pool.query("SELECT * FROM images WHERE blog_id=? AND comment_id IS NULL", [req.params.id])
 
   Promise.all([promise1, promise2, promise3])
