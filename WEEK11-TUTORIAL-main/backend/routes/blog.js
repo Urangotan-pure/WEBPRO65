@@ -24,6 +24,7 @@ router.post("/blogs/search", async function (req, res, next) {
 router.post("/blogs/addlike/:blogId", async function (req, res, next) {
   //ทำการ select ข้อมูล blog ที่มี id = req.params.blogId
   try{
+    console.log("เข้าแล้ว")
     const [rows, fields] = await pool.query("SELECT * FROM blogs WHERE id=?", [
       req.params.blogId,
     ]);
@@ -34,6 +35,7 @@ router.post("/blogs/addlike/:blogId", async function (req, res, next) {
     console.log('Like num =', likeNum) // console.log() จำนวน Like ออกมาดู
     //เพิ่มจำนวน like ไปอีก 1 ครั้ง
     likeNum += 1
+    console.log(likeNum)
 
     //Update จำนวน Like กลับเข้าไปใน DB
     const [rows2, fields2] = await pool.query("UPDATE blogs SET blogs.like=? WHERE blogs.id=?", [
@@ -50,12 +52,15 @@ router.post("/blogs/addlike/:blogId", async function (req, res, next) {
   }
 });
 
+
+// เชื่อมมาจาก CreateBlog
 router.post("/blogs", upload.single('blog_image'), async function (req, res, next) {
   const file = req.file;
     if (!file) {
       const error = new Error("Please upload a file");
       error.httpStatusCode = 400;
-      return res.json(error)
+      //add status(400)
+      return res.status(400).json(error)
     }
 
     const title = req.body.title;
@@ -82,7 +87,8 @@ router.post("/blogs", upload.single('blog_image'), async function (req, res, nex
       res.json("success!")
     } catch (err) {
       await conn.rollback();
-      res.json(err)
+      //add
+      res.status(400).json(err)
     } finally {
       console.log('finally')
       conn.release();
