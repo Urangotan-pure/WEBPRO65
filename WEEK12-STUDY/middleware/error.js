@@ -9,13 +9,16 @@ app.get('/', (req, res) => {
 app.get('/error', (req, res, next) => {
   fs.readFile('/file-does-not-exist', (err, data) => {
     if (err) {
-      next(err) // Pass errors to Express.
+      // next(err) // Pass errors to Express.
+      next('File not exists')
     } else {
       res.send(data)
     }
   })
 })
 
+
+//ใช้งานได้หลากหลายดี
 // app.use((err, req, res, next) => {
 //   console.error(err.stack)
 //   res.status(500).send('Something broke!')

@@ -16,6 +16,7 @@
         </p>
         <div class="columns is-centered">
           <div class="column is-5-tablet is-4-desktop is-3-widescreen">
+            <!-- from ถูก actionไปที่ /login -->
             <form action="/login" method="POST" class="box">
               <div class="field">
                 <label for="" class="label">Username</label>
@@ -31,11 +32,13 @@
               </div>
               <div class="field">
                 <input type="submit" class="button is-success" value="Login">
+                <!-- ครอบ if(typeof) เพื่อเช็คว่าไม่เป็น undefined -->
                 <% if (typeof error !== "undefined") { %>
                 <p class="has-text-danger"><%= error %></p>
                 <% } %>
               </div>
             </form>
+            <!-- ---------------------------- -->
           </div>
         </div>
       </div>
