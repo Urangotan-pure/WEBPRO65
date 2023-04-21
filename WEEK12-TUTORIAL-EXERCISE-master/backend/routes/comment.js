@@ -1,13 +1,35 @@
 const { json } = require("express");
 const express = require("express");
 const pool = require("../config");
+const { isLoggedIn } = require('../middlewares') //+
 
 const router = express.Router();
+
+//middlewares ทำการคิวรี ข้อมูลจาก Blog
+//เป็นการป้องกัน ไม่ไม่ให้มีการยิ่ง req เพื่อแก้ไขทั้งๆที่ไม่ใช่ blog ตัวเอง
+const CommentOwner = async (req, res, next) => {
+    //+
+    if (req.user.role === "admin") {
+        return next();
+    }
+
+    const [[comment]] = await pool.query("SELECT * FROM comments WHERE blog_id=?", [
+        req.params.blogId,
+    ]);
+
+    if (comment.comment_by_id !== req.user.id) {
+        return res
+            .status(403)
+            .send("You do not have permission to perform this action");
+    }
+
+    next();
+};
 
 router.get('/:blogId/comments', function (req, res, next) {
 });
 
-router.post('/:blogId/comments', async function (req, res, next) {
+router.post('/:blogId/comments', isLoggedIn, async function (req, res, next) {//+ isLoggedIn
     const comment = req.body.comment
 
     const conn = await pool.getConnection()
@@ -15,8 +37,8 @@ router.post('/:blogId/comments', async function (req, res, next) {
 
     try {
         const [rows1, fields1] = await conn.query(
-            'INSERT INTO `comments` (`blog_id`, `comment`, `like`, `comment_date`) VALUES (?, ?, ?, CURRENT_TIMESTAMP)',
-            [req.params.blogId, comment, 0]
+            'INSERT INTO `comments` (`blog_id`, `comment`, `like`, `comment_date`, `comment_by_id`) VALUES (?, ?, ?, CURRENT_TIMESTAMP,?)',
+            [req.params.blogId, comment, 0, req.user.id]
         )
         const [rows2, fields2] = await conn.query(
             'SELECT * FROM `comments` WHERE `id` = ?',
@@ -33,7 +55,8 @@ router.post('/:blogId/comments', async function (req, res, next) {
     }
 });
 
-router.put('/comments/:commentId', async function (req, res, next) {
+//+ isLoggedIn
+router.put('/comments/:commentId', isLoggedIn, CommentOwner, async function (req, res, next) {
     try {
         const [rows1, fields1] = await pool.query(
             'UPDATE comments SET comment=? WHERE id=?', [req.body.comment, req.params.commentId]
@@ -46,7 +69,7 @@ router.put('/comments/:commentId', async function (req, res, next) {
 });
 
 // Delete comment
-router.delete('/comments/:commentId', async function (req, res, next) {
+router.delete('/comments/:commentId', isLoggedIn, CommentOwner, async function (req, res, next) {//+ isLoggedIn
     try {
         const [rows1, fields1] = await pool.query(
             'DELETE FROM comments WHERE id=?', [req.params.commentId]

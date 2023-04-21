@@ -20,11 +20,7 @@
             <div class="card">
               <div class="card-image pt-5">
                 <figure class="image">
-                  <img
-                    style="height: 120px"
-                    :src="imagePath(blog.file_path)"
-                    alt="Placeholder image"
-                  />
+                  <img style="height: 120px" :src="imagePath(blog.file_path)" alt="Placeholder image" />
                 </figure>
               </div>
               <div class="card-content">
@@ -38,13 +34,12 @@
                     <span class="icon">
                       <i class="far fa-heart"></i>
                     </span>
-                    <span>Like ({{blog.like}})</span>
+                    <span>Like ({{ blog.like }})</span>
                   </span>
                 </a>
-                <a
-                  class="card-footer-item"
-                  @click="$router.push({name:'update-blog',params:{id:blog.id}})"
-                >
+                <!-- + v-if="isBlogOwner(blog)" -->
+                <a v-if="isBlogOwner(blog)" class="card-footer-item"
+                  @click="$router.push({ name: 'update-blog', params: { id: blog.id } })">
                   <span class="icon-text">
                     <span>Edit</span>
                   </span>
@@ -59,10 +54,12 @@
 </template>
 
 <script>
-import axios from "axios";
+// import axios from "axios";
+import axios from '@/plugins/axios' //+
 // @ is an alias to /src
 export default {
   name: "Home",
+  props: ['user'], //รับมาจาก App.vue
   data() {
     return {
       search: "",
@@ -111,6 +108,13 @@ export default {
           console.log(err);
         });
     },
+    isBlogOwner(blog) {
+      if(this.user.role == "admin"){
+        return true
+      }
+      if (!this.user) return false
+      return blog.create_by_id === this.user.id
+    }
   },
 };
 </script>

@@ -100,6 +100,7 @@
                     <div class="level-right">
                       <div class="level-item">
                         <button
+                        v-if="isCommentOwner(comment)"
                           @click="editToggle = index; editCommentMessage = comment.comment"
                           class="button is-warning"
                         >
@@ -111,6 +112,7 @@
                       </div>
                       <div class="level-item">
                         <button
+                        v-if="isCommentOwner(comment)"
                           @click="deleteComment(comment.id, index)"
                           class="button is-danger is-outlined"
                         >
@@ -128,7 +130,8 @@
           </div>
           <footer class="card-footer">
             <router-link class="card-footer-item" to="/">To Home Page</router-link>
-            <a class="card-footer-item" @click="deleteBlog">
+            <!-- Delete this blog + v-if="isBlogOwner(blog)" -->
+            <a  v-if="isBlogOwner(blog)" class="card-footer-item" @click="deleteBlog" >
               <span>Delete this blog</span>
             </a>
           </footer>
@@ -139,9 +142,12 @@
 </template>
 
 <script>
-import axios from "axios";
+// import axios from "axios";
+import axios from '@/plugins/axios' //+
+import { req } from 'vuelidate/lib/validators/common';
 
 export default {
+  props: ['user'],
   data() {
     return {
       blog: {},
@@ -237,6 +243,19 @@ export default {
           });
       }
     },
+    //6.1 ใน frontend/src/views/blogs/DetailBlog.vue ให้ซ่อนปุ่ม Delete this blog ถ้าไม่ใช่ blog ของตัวเอง
+    //6.2 ใน frontend/src/views/blogs/DetailBlog.vue ให้ซ่อนปุ่ม แก้ไขและปุ่มลบ Comment ใน Comment ที่ไม่ใช่ Comment ของตัวเอง
+    isBlogOwner(blog) {
+      if (!this.user) return false
+      return blog.create_by_id === this.user.id
+    },
+    isCommentOwner(comment) {
+      if(this.user.role == "admin"){
+        return true
+      }
+      if (!this.user) return false
+      return comment.comment_by_id === this.user.id
+    }
   },
 };
 </script>
