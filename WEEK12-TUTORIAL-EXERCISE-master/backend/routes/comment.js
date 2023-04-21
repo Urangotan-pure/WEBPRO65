@@ -9,12 +9,14 @@ const router = express.Router();
 //เป็นการป้องกัน ไม่ไม่ให้มีการยิ่ง req เพื่อแก้ไขทั้งๆที่ไม่ใช่ blog ตัวเอง
 const CommentOwner = async (req, res, next) => {
     //+
+    //req.user รับมาจาก isLoggedIn 
     if (req.user.role === "admin") {
         return next();
     }
 
-    const [[comment]] = await pool.query("SELECT * FROM comments WHERE blog_id=?", [
-        req.params.blogId,
+    //WHERE id=? id ของ comment
+    const [[comment]] = await pool.query("SELECT * FROM comments WHERE id=?", [
+        req.params.commentId,
     ]);
 
     if (comment.comment_by_id !== req.user.id) {

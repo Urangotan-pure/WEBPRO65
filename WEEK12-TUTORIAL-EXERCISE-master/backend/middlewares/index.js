@@ -41,6 +41,7 @@ async function isLoggedIn(req, res, next) {
         " FROM users WHERE id = ?",
         [token.user_id]
     );
+    // middleware สามารถส่ง req.user ให้กับตัว middleware เหมือนกันได้
     req.user = users[0];
 
     next();
