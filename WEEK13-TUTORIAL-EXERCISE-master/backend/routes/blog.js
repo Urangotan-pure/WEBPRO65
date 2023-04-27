@@ -2,11 +2,14 @@ const express = require("express");
 const path = require("path");
 const pool = require("../config");
 const fs = require("fs");
+const Joi = require("joi"); //+
+
 
 router = express.Router();
 
 // Require multer for file upload
 const multer = require("multer");
+const { start } = require("repl");
 // SET STORAGE
 var storage = multer.diskStorage({
   destination: function (req, file, callback) {
@@ -52,55 +55,75 @@ router.put("/blogs/addlike/:blogId", async function (req, res, next) {
   }
 });
 
-router.post(
-  "/blogs",
-  upload.array("myImage", 5),
-  async function (req, res, next) {
-    if (req.method == "POST") {
-      const file = req.files;
-      let pathArray = [];
+const createBlogSchema = Joi.object({
+  title: Joi.string().required().pattern(/[a-zA-Z]{10,25}/),
+  content: Joi.string().required().min(50),
+  status: Joi.string().required().valid('status_private', 'status_public'),
+  reference: Joi.string().required().uri(),
+  pinned: Joi.string(),
+  // start_date: Joi.date().when('end_date', {
+  //   is: Joi.exist(),
+  //   then: Joi.date().less(Joi.ref('end_date'))
+  // }),
+  // end_date: Joi.date().when('start_date', {
+  //   is: Joi.exist(),
+  //   then: Joi.date().greater(Joi.ref('start_date'))})
+});
 
-      if (!file) {
-        return res.status(400).json({ message: "Please upload a file" });
-      }
+router.post("/blogs", upload.array("myImage", 5), async function (req, res, next) {
+  try {
+    await createBlogSchema.validateAsync(req.body, { abortEarly: true }) //ให้ทำการcheckทุกเงื่อนไขก่อน
+  } catch (err) {
+    return res.status(400).json(err)
+  }
 
-      const title = req.body.title;
-      const content = req.body.content;
-      const status = req.body.status;
-      const pinned = req.body.pinned;
+  if (req.method == "POST") {
+    const file = req.files;
+    let pathArray = [];
 
-      const conn = await pool.getConnection();
-      // Begin transaction
-      await conn.beginTransaction();
+    if (!file) {
+      return res.status(400).json({ message: "Please upload a file" });
+    }
 
-      try {
-        let results = await conn.query(
-          "INSERT INTO blogs(title, content, status, pinned, `like`,create_date) VALUES(?, ?, ?, ?, 0,CURRENT_TIMESTAMP);",
-          [title, content, status, pinned]
-        );
-        const blogId = results[0].insertId;
+    const title = req.body.title;
+    const content = req.body.content;
+    const status = req.body.status === "status_private" ? "01" : "02";
+    const pinned = req.body.pinned;
+    console.log(title, content, status, pinned)
 
-        req.files.forEach((file, index) => {
-          let path = [blogId, file.path.substring(6), index == 0 ? 1 : 0];
-          pathArray.push(path);
-        });
 
-        await conn.query(
-          "INSERT INTO images(blog_id, file_path, main) VALUES ?;",
-          [pathArray]
-        );
+    const conn = await pool.getConnection();
+    // Begin transaction
+    await conn.beginTransaction();
 
-        await conn.commit();
-        res.send("success!");
-      } catch (err) {
-        await conn.rollback();
-        return res.status(400).json(err);
-      } finally {
-        console.log("finally");
-        conn.release();
-      }
+    try {
+      let results = await conn.query(
+        "INSERT INTO blogs(title, content, status, pinned, `like`,create_date) VALUES(?, ?, ?, ?, 0,CURRENT_TIMESTAMP);",
+        [title, content, status, pinned]
+      );
+      const blogId = results[0].insertId;
+
+      req.files.forEach((file, index) => {
+        let path = [blogId, file.path.substring(6), index == 0 ? 1 : 0];
+        pathArray.push(path);
+      });
+
+      await conn.query(
+        "INSERT INTO images(blog_id, file_path, main) VALUES ?;",
+        [pathArray]
+      );
+
+      await conn.commit();
+      res.send("success!");
+    } catch (err) {
+      await conn.rollback();
+      return res.status(400).json(err);
+    } finally {
+      console.log("finally");
+      conn.release();
     }
   }
+}
 );
 
 // Blog detail

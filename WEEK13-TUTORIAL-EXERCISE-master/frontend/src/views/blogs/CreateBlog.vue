@@ -15,13 +15,7 @@
       </div>
     </section>
     <section class="px-6">
-      <input
-        class="mb-5"
-        multiple
-        type="file"
-        accept="image/png, image/jpeg, image/webp"
-        @change="selectImages"
-      />
+      <input class="mb-5" multiple type="file" accept="image/png, image/jpeg, image/webp" @change="selectImages" />
 
       <div v-if="images" class="columns is-multiline">
         <div v-for="(image, index) in images" :key="image.id" class="column is-one-quarter">
@@ -41,23 +35,43 @@
       <div class="field mt-5">
         <label class="label">Title</label>
         <div class="control">
-          <input v-model="titleBlog" class="input" type="text" placeholder="Text input" />
+          <input v-model="$v.titleBlog.$model" :class="{ 'is-danger': $v.titleBlog.$error }" class="input" type="text"
+            placeholder="Text input" />
         </div>
       </div>
+      <!-- + -->
+      <template v-if="$v.titleBlog.$error">
+        <p class="help is-danger" v-if="!$v.titleBlog.required">This field is required</p>
+        <p class="help is-danger" v-if="!$v.titleBlog.maxLength">title must not more than 25 letters</p>
+        <p class="help is-danger" v-if="!$v.titleBlog.minLength">title must be at least 10 letters</p>
+        <p class="help is-danger" v-if="!$v.titleBlog.onlyText">title only character</p>
+      </template>
 
       <div class="field">
         <label class="label">Content</label>
         <div class="control">
-          <textarea v-model="contentBlog" class="textarea" placeholder="Textarea"></textarea>
+          <textarea v-model="$v.contentBlog.$model" :class="{ 'is-danger': $v.contentBlog.$error }" class="textarea"
+            placeholder="Textarea"></textarea>
         </div>
       </div>
-      
+      <!-- + -->
+      <template v-if="$v.contentBlog.$error">
+        <p class="help is-danger" v-if="!$v.contentBlog.required">This field is required</p>
+        <p class="help is-danger" v-if="!$v.contentBlog.minLength">content must be at least 50 letters</p>
+      </template>
+
       <div class="field">
         <label class="label">Reference</label>
         <div class="control">
-          <input class="input" type="url" v-model="reference" placeholder="e.g. https://www.google.com">
+          <input v-model="$v.reference.$model" :class="{ 'is-danger': $v.reference.$error }" class="input" type="url"
+            placeholder="e.g. https://www.google.com">
         </div>
       </div>
+      <!-- + -->
+      <template v-if="$v.reference.$error">
+        <p class="help is-danger" v-if="!$v.reference.required">This field is required</p>
+        <p class="help is-danger" v-if="!$v.reference.url">reference must be url "https"</p>
+      </template>
 
       <div class="control mb-3">
         <label class="radio">
@@ -99,6 +113,11 @@
           </div>
         </div>
       </div>
+      <!-- <p v-if="$v.start_date.$error">กรุณากรอกวันที่ระหว่าง 1970-2099</p>
+      <p v-if="$v.end_date.$error">กรุณากรอกวันที่ระหว่าง 1970-2099</p>
+      <p v-if="$v.start_date.$error && $v.end_date.$error">กรุณากรอกวันที่ให้ถูกต้อง</p>
+      <p v-if="!$v.start_date.$error && !$v.end_date.$error && new Date(start_date) > new Date(end_date)">Start date
+        ต้องมาก่อน end date</p> -->
 
       <div class="field is-grouped">
         <div class="control">
@@ -114,6 +133,23 @@
 
 <script>
 import axios from "axios";
+import { required, minLength, maxLength, url} from 'vuelidate/lib/validators' //+
+
+function onlyText(value) {
+  if (!(value.match(/[a-z]/) && value.match(/[A-Z]/) && !(value.match(/[0-9]/)))) {
+    return false
+  }
+  return true
+}
+
+function privateORpublic(value) {
+  if (!(value === 'status_private' || value === 'status_public')) {
+    return false
+  }
+  return true
+}
+
+
 
 export default {
   data() {
@@ -129,6 +165,28 @@ export default {
       start_date: "",
       end_date: ""
     };
+  },
+  validations: {
+    titleBlog: {
+      required,
+      onlyText: onlyText,
+      maxLength: maxLength(25),
+      minLength: minLength(10)
+    },
+    contentBlog: {
+      required,
+      minLength: minLength(50)
+    },
+    statusBlog: {
+      required,
+      minLength: minLength(8),
+      privateORpublic: privateORpublic
+    },
+    reference: {
+      required,
+      url: url
+    },
+
   },
   methods: {
     selectImages(event) {
@@ -148,14 +206,17 @@ export default {
       formData.append("title", this.titleBlog);
       formData.append("content", this.contentBlog);
       formData.append("pinned", this.pinnedBlog ? 1 : 0);
-      // formData.append("reference", this.reference);
-      // formData.append("start_date", this.start_date);
-      // formData.append("end_date", this.end_date);
+      formData.append("reference", this.reference); //+ 
+      // formData.append("start_date", this.start_date); //+
+      // formData.append("end_date", this.end_date); //+
       formData.append("status", this.statusBlog);
       this.images.forEach((image) => {
         formData.append("myImage", image);
       });
 
+      console.log(this.statusBlog)
+      console.log(this.pinnedBlog ? 1 : 0)
+      console.log(this.pinnedBlog)
       // Note ***************
       // ตอนเรายิง Postmant จะใช้ fromData
       // ตอนยิงหลาย ๆ รูปพร้อมกันใน Postman จะเป็นแบบนี้
@@ -172,12 +233,11 @@ export default {
 
       axios
         .post("http://localhost:3000/blogs", formData)
-        .then((res) => this.$router.push({name: 'home'}))
+        .then((res) => this.$router.push({ name: 'home' }))
         .catch((e) => console.log(e.response.data));
     },
   },
 };
 </script>
 
-<style>
-</style>
+<style></style>
