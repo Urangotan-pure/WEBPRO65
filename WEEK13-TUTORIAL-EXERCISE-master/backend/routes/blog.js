@@ -22,7 +22,8 @@ var storage = multer.diskStorage({
     );
   },
 });
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage,
+                        limits: { fileSize: 1000000 } });
 
 // Like blog that id = blogId
 router.put("/blogs/addlike/:blogId", async function (req, res, next) {
@@ -61,18 +62,17 @@ const createBlogSchema = Joi.object({
   status: Joi.string().required().valid('status_private', 'status_public'),
   reference: Joi.string().required().uri(),
   pinned: Joi.string(),
-  // start_date: Joi.date().when('end_date', {
-  //   is: Joi.exist(),
-  //   then: Joi.date().less(Joi.ref('end_date'))
-  // }),
-  // end_date: Joi.date().when('start_date', {
-  //   is: Joi.exist(),
-  //   then: Joi.date().greater(Joi.ref('start_date'))})
+  start_date: Joi.date().optional(),
+  end_date: Joi.date().optional().when('start_date', {
+    is: Joi.date().required(),
+    then: Joi.date().greater(Joi.ref('start_date')).required(),
+    // otherwise: Joi.date().optional
+  })
 });
 
 router.post("/blogs", upload.array("myImage", 5), async function (req, res, next) {
   try {
-    await createBlogSchema.validateAsync(req.body, { abortEarly: true }) //ให้ทำการcheckทุกเงื่อนไขก่อน
+    await createBlogSchema.validateAsync(req.body, { abortEarly: false }) //ให้ทำการcheckทุกเงื่อนไขก่อน
   } catch (err) {
     return res.status(400).json(err)
   }
