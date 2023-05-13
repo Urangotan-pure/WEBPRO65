@@ -99,7 +99,9 @@ app.post('/todo', async (req, res, next) => {
     try {
         await signupSchema.validateAsync(req.body, { abortEarly: false }) //ให้ทำการcheckทุกเงื่อนไขก่อน
     } catch (error) {
-        return res.status(400).json(error)
+        return res.status(400).json({
+            "message": "ต้องกรอก title"
+          })
     }
 
     const order = await pool.query("SELECT MAX(`order`) as 'max' FROM todo")
@@ -126,18 +128,18 @@ app.post('/todo', async (req, res, next) => {
         }
         //date มีค่า
         else {
-            const [insert] = await pool.query('INSERT INTO todo (title, description, due_date) VALUES(?, ?, ?);', [title, description, 2023-05-15])
+            const [insert] = await pool.query('INSERT INTO todo (title, description, due_date,  `order`) VALUES(?, ?, ?, ?);', [title, description,date, (order[0][0].max)+1 ])
         }
         //หลังจาก INSERT เข้าไปเสร็จแล้ว
         await conn.commit()
         //ทำการส่งค่าที่รับเข้ามาใหม่
-        res.send({
-            "message": `${title}`,
+        res.status(201).send({
+            "message": `สร้าง ToDo'${title}' สำเร็จ`,
             "todo": {
                 "id": (user_id[0][0].max)+1,
                 "title": title,
                 "description": description,
-                "due_date": due_date,
+                "due_date": date,
                 "order": (order[0][0].max)+1
             }
         })

@@ -118,7 +118,7 @@ app.post('/todo', async (req,res,next)=>{
               "id": 1,
               "title": "อ่านหนังสือสอบ Web Pro",
               "description": "อ่านเกี่ยวกับ JS และ Vue JS",
-              "due_date": "2023-05-01",
+              "due_date": `${date}`,
               "order": 1
             }
           })
