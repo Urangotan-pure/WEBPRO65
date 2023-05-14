@@ -1,135 +1,117 @@
-const { Router } = require('express');
-const e = require('express');
-const express = require('express');
+const express = require("express");
 const app = express();
-const Joi = require("joi"); //+
 
-const pool = require('./config/database');
+const pool = require("./config/database");
+const { func } = require("joi");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/** 
+/**
  *  เริ่มทำข้อสอบได้ที่ใต้ข้อความนี้เลยครับ
  * !!! ไม่ต้องใส่ app.listen() ในไฟล์นี้นะครับ มันจะไป listen ที่ไฟล์ server.js เองครับ !!!
  * !!! ห้ามลบ module.exports = app; ออกนะครับ  ไม่งั้นระบบตรวจไม่ได้ครับ !!!
-*/
+ */
 
-app.get('/get_todo', async (req,res,next) => {
-    const [data] = await pool.query('SELECT * FROM todo')
-    return res.send(data)
-})
+app.post("/todo", async function (req, res) {
+    console.log(req.body);
+    const title = req.body.title || null;
+    const description = req.body.description || null;
+    const due_date = req.body.due_date || new Date();
 
-app.delete('/todo/:id', async (req,res,next) => {
-    const id = req.params.id;
-    console.log(id)
-
-    //การ select ข้อมูลไม่ต้องสร้าง Transaction
-    const [todo] = await pool.query('SELECT * FROM todo WHERE id=?', [id])
-    console.log(todo)
-
-    if(!todo.length){
-        return res.status(404).send({
-            "message": "ไม่พบ ToDo ที่ต้องการลบ"
-          })
+    //ดักกรณีไม่ส่ง title หรือ description มา
+    if (!title || title === "") {
+        res.status(400).send({
+            message: "ต้องกรอก title",
+        });
+    }
+    if (!description || description === "") {
+        res.status(400).send({
+            message: "ต้องกรอก description",
+        });
     }
 
-    const conn = await pool.getConnection()
-    await conn.beginTransaction()
+    try {
+        //query max order
+        const [order, fields] = await pool.query(
+            "SELECT MAX(`order`) as mxOrder FROM todo"
+        );
+        console.log("Max Order =", order[0].mxOrder);
+        const maxOrder = order[0].mxOrder;
 
-    try{
-       const [data] = await pool.query('DELETE FROM todo WHERE id=?',[id])
-       res.send({
-            "message": `ลบ ToDo '${todo[0].title}' สำเร็จ`,
-          })
-       await conn.commit()
+        //เพิ่ม ToDo ใหม่
+        const [newTodo, fields1] = await pool.query(
+            "INSERT INTO todo(title, description, due_date, `order`) VALUES(?, ?, ?, ?)",
+            [title, description, due_date, maxOrder + 1]
+        );
 
-
-    }catch(error){
-        await conn.rollback()
-        res.send(error)
-    }finally{
-        conn.release()
+        //query todo ที่ insert ไปล่าสุดมาเป็น response
+        const insertId = newTodo.insertId;
+        const [rows, fields2] = await pool.query(
+            " SELECT *, DATE_FORMAT(due_date, '%Y-%m-%d') AS due_date  FROM todo WHERE id = ?",
+            [insertId]
+        );
+        res
+            .status(201)
+            .send({ message: `สร้าง ToDo '${title}' สำเร็จ`, todo: rows[0] });
+    } catch (err) {
+        console.log(err);
     }
-
-
-})
-
-
-const dateJoi = Joi.object({
-    start_date: Joi.date().required(),
-    end_date: Joi.date().required().min(Joi.ref('start_date'))
-    // end_date: Joi.date().required().when('start_date', {
-    //     is: Joi.date().required(),
-    //     then: Joi.date().min(Joi.ref('start_date')).required()
-    // })
 });
 
-app.get('/todo', async (req,res, next) =>{
-    const result = dateJoi.validate(req.query)
-    if(result.error){
-        console.log(result.error.details)
-        return res.status(400).send(result.error.details)
-    }
-
-    const start_date = req.query.start_date;
-    const end_date = req.query.end_date;
-    console.log(start_date)
-    console.log(end_date)
-
-    const [data1] = await pool.query('SELECT * , DATE_FORMAT(due_date, "%Y-%m-%d") AS due_date FROM todo WHERE due_date BETWEEN ? AND ?', [start_date, end_date])
-    return res.send(data1)
-})
-
-const signupSchema = Joi.object({
-    title: Joi.string().required(),
-    description: Joi.string().required(),
-}).unknown()
-
-app.post('/todo', async (req,res,next)=>{
-
-    try{
-        await signupSchema.validateAsync(req.body, { abortEarly: false }) //ให้ทำการcheckทุกเงื่อนไขก่อน
-    }catch(error){
-        return res.status(400).json(error)
-    }
-
-    const order = await pool.query("SELECT MAX(`order`) as 'max' FROM todo")
-    console.log(order[0][0].max)
-
-    const conn = await pool.getConnection()
-    await conn.beginTransaction()
-
-    const title = req.body.title;
-    const description = req.body.description;
-    const date = req.body.due_date;
-    
-    try{
-        if(!date){
-            const [insert] = await pool.query('INSERT INTO todo (title, description, due_date) VALUES(?, ?,CURRENT_TIMESTAMP);', [title,description])
-            // console.log("date")
-        }else{
-            const [insert] = await pool.query('INSERT INTO todo (title, description, due_date) VALUES(?, ?,?);', [title,description,date])
+app.delete("/todo/:id", async function (req, res) {
+    try {
+        const deleteId = req.params.id;
+        //เช็คว่ามี id ที่ต้องการลบมั้ย
+        const [row, fields] = await pool.query(
+            "SELECT COUNT(*) FROM todo WHERE id = ?",
+            [deleteId]
+        );
+        if (row[0]["COUNT(*)"] == 0) {
+            return res.status(404).json({
+                message: "ไม่พบ ToDo ที่ต้องการลบ",
+            });
         }
-        await conn.commit()
-        res.send({
-            "message": "สร้าง ToDo 'อ่านหนังสือสอบ Web Pro' สำเร็จ",
-            "todo": {
-              "id": 1,
-              "title": "อ่านหนังสือสอบ Web Pro",
-              "description": "อ่านเกี่ยวกับ JS และ Vue JS",
-              "due_date": `${date}`,
-              "order": 1
-            }
-          })
-    }catch(error){
-        await conn.rollback()
-        res.send(error)
-    }finally{
-        conn.release()
-    }
 
-    
-})
+        //query title มาใช้ response
+        const [title, fields1] = await pool.query(
+            "SELECT title FROM todo WHERE id = ?",
+            [deleteId]
+        );
+
+        //ลบ ToDo id
+        const [del, fields2] = await pool.query("DELETE FROM todo WHERE id = ?", [
+            deleteId,
+        ]);
+        res.status(200).send({
+            message: `ลบ ToDo '${title[0].title}' สำเร็จ`,
+        });
+    } catch (err) {
+        console.log(err);
+    }
+});
+
+app.get("/todo", async function (req, res) {
+    try {
+        //เก็บตัวแปร query
+        const startDate = req.query.start_date || null;
+        const endDate = req.query.end_date || null;
+
+        //ดักกรณีที่ไม่ส่ง query string มาให้
+        if (!startDate || !endDate) {
+            const [rows, fields] = await pool.query("SELECT *, DATE_FORMAT(due_date, '%Y-%m-%d') AS due_date FROM todo")
+            res.status(200).send(rows)
+        }
+
+        //query เลือกเฉพาะช่วงวันที่ต้องการ
+        const [row2, fields2] = await pool.query("SELECT *, DATE_FORMAT(due_date, '%Y-%m-%d') AS due_date FROM todo WHERE due_date BETWEEN ? AND ?",
+            [startDate, endDate])
+
+        res.status(200).send(row2)
+
+    } catch (err) {
+        console.log(err)
+    }
+});
 
 module.exports = app;
